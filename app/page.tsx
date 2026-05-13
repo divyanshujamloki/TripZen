@@ -14,7 +14,6 @@ import Newsletter from '../components/Newsletter';
 export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
       <main>
         <Hero />
         <motion.div
@@ -65,7 +64,6 @@ export default function Home() {
           <Newsletter />
         </motion.div>
       </main>
-      <Footer />
     </div>
   );
 }

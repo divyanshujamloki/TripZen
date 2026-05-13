@@ -23,7 +23,7 @@ const Header = () => {
           <Link href="/tours" className="text-white hover:text-gray-300 transition-colors">Tours</Link>
           <Link href="/about" className="text-white hover:text-gray-300 transition-colors">About</Link>
           <Link href="/contact" className="text-white hover:text-gray-300 transition-colors">Contact</Link>
-          <Link href="/blog" className="text-white hover:text-gray-300 transition-colors">Blog</Link>
+          {/* <Link href="/blog" className="text-white hover:text-gray-300 transition-colors">Blog</Link> */}
         </nav>
 
         <div className="flex items-center space-x-4">
@@ -59,7 +59,7 @@ const Header = () => {
             <Link href="/tours" className="text-white hover:text-gray-300">Tours</Link>
             <Link href="/about" className="text-white hover:text-gray-300">About</Link>
             <Link href="/contact" className="text-white hover:text-gray-300">Contact</Link>
-            <Link href="/blog" className="text-white hover:text-gray-300">Blog</Link>
+            {/* <Link href="/blog" className="text-white hover:text-gray-300">Blog</Link> */}
             {!user && (
               <>
                 <Link href="/login" className="text-white hover:text-gray-300">Login</Link>

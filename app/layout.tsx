@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Luxury travel experiences',
 }
 
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+
 export default function RootLayout({
   children,
 }: {
@@ -17,9 +20,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-black text-white`}>
         <Providers>
-          {children}
+          <Header />
+          <main className="pt-20">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>
