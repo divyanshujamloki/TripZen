@@ -128,23 +128,13 @@ export default function ContactPage() {
                                 </div>
                             </div>
 
-                            {/* Social Media */}
-                            <div className="mt-10 pt-8 border-t border-gray-800">
-                                <h3 className="text-gray-300 font-medium mb-4">Follow Us</h3>
-                                <div className="flex space-x-4">
-                                    {[Facebook, Twitter, Instagram].map((Icon, idx) => (
-                                        <a key={idx} href="#" className="p-3 bg-gray-900 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors">
-                                            <Icon className="w-5 h-5" />
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
+                       
                         </div>
 
                         {/* Google Map Embedded */}
                         <div className="h-64 rounded-2xl overflow-hidden glass-dark border border-gray-800">
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.25280010374!2d-74.14448719293153!3d40.697631233306935!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224346.24823956553!2d77.0437023!3d28.5272525!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b47ed6c69%3A0xa5aef3ef278aeab!2sDelhi%2C%20India!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                                 className="w-full h-full border-0 grayscale opacity-70 hover:opacity-100 transition-opacity duration-300"
                                 allowFullScreen={false}
                                 loading="lazy"
