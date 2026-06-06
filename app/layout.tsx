@@ -6,8 +6,8 @@ import Providers from '../components/Providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Premium Tourism Website',
-  description: 'Luxury travel experiences',
+  title: 'TripZen — Affordable Group Trips',
+  description: 'Browse upcoming group trips across India. Full itinerary, transparent pricing, easy booking.',
 }
 
 import Header from '../components/Header'
@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-black text-white`}>
         <Providers>
           <Header />
-          <main className="pt-20">
+          <main className="pt-14 sm:pt-16 min-h-screen flex flex-col bg-black">
             {children}
           </main>
           <Footer />

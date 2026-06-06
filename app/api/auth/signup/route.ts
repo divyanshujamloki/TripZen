@@ -1,27 +1,27 @@
 import { NextResponse } from 'next/server';
+import { findUserByEmail, createUser } from '../../../../lib/mockStore';
+import { createMockToken } from '../../../../lib/auth';
 
 export async function POST(req: Request) {
-    try {
-        const body = await req.json();
-        const { fullName, email, phone, password } = body;
+  try {
+    const { name, email, phone, password } = await req.json();
 
-        if (!fullName || !email || !password) {
-            return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
-        }
-
-        // Mock validation logic
-        if (password.length < 8) {
-            return NextResponse.json({ message: 'Password must be at least 8 characters long' }, { status: 400 });
-        }
-
-        // Mock success response
-        return NextResponse.json({
-            message: 'User registered successfully',
-            token: 'mock-jwt-token-new-user',
-            user: { id: Math.random().toString(36).substring(7), name: fullName, email }
-        }, { status: 201 });
-
-    } catch (error) {
-        return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    if (!name || !email || !password) {
+      return NextResponse.json({ message: 'Name, email, and password are required' }, { status: 400 });
     }
+
+    if (findUserByEmail(email)) {
+      return NextResponse.json({ message: 'Email already registered' }, { status: 409 });
+    }
+
+    const user = createUser({ name, email, phone: phone ?? '', role: 'user' });
+
+    return NextResponse.json({
+      message: 'Registration successful',
+      token: createMockToken(user.id),
+      user,
+    }, { status: 201 });
+  } catch {
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
 }

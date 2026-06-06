@@ -2,41 +2,55 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
-import { User, Menu, X } from 'lucide-react';
+import { logout } from '../redux/slices/authSlice';
+import { Menu, X } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('tripzen_token');
+    dispatch(logout());
+    router.push('/');
+  };
+
+  const navLink = 'text-[#a1a1a6] hover:text-white text-sm transition-colors duration-200';
 
   return (
     <header className="fixed top-0 w-full z-50 glass-dark">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-white">
-          LuxTravel
+      <div className="tz-container flex h-14 sm:h-16 items-center justify-between">
+        <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-white">
+          TripZen
         </Link>
 
-        <nav className="hidden md:flex space-x-8">
-          <Link href="/" className="text-white hover:text-gray-300 transition-colors">Home</Link>
-          <Link href="/destinations" className="text-white hover:text-gray-300 transition-colors">Destinations</Link>
-          <Link href="/tours" className="text-white hover:text-gray-300 transition-colors">Tours</Link>
-          <Link href="/about" className="text-white hover:text-gray-300 transition-colors">About</Link>
-          <Link href="/contact" className="text-white hover:text-gray-300 transition-colors">Contact</Link>
-          {/* <Link href="/blog" className="text-white hover:text-gray-300 transition-colors">Blog</Link> */}
+        <nav className="hidden md:flex items-center gap-8">
+          <Link href="/" className={navLink}>Home</Link>
+          <Link href="/trips" className={navLink}>Trips</Link>
+          <Link href="/contact" className={navLink}>Contact</Link>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {user ? (
-            <Link href="/dashboard" className="text-white hover:text-gray-300">
-              <User size={24} />
-            </Link>
+            <>
+              <Link href="/dashboard" className={`${navLink} hidden sm:inline`}>Dashboard</Link>
+              {user.role === 'admin' && (
+                <Link href="/admin" className={`${navLink} hidden sm:inline`}>Admin</Link>
+              )}
+              <button onClick={handleLogout} className={`${navLink} hidden sm:inline`}>Logout</button>
+            </>
           ) : (
-            <div className="hidden md:flex space-x-2">
-              <Link href="/login" className="px-4 py-2 bg-white/20 rounded-lg text-white hover:bg-white/30 transition-colors">
-                Login
-              </Link>
-              <Link href="/register" className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors">
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/login" className={navLink}>Login</Link>
+              <Link
+                href="/register"
+                className="text-sm font-medium text-white bg-white/10 hover:bg-white/15 px-4 py-2 rounded-full transition-colors"
+              >
                 Sign Up
               </Link>
             </div>
@@ -44,26 +58,32 @@ const Header = () => {
 
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-white"
+            className="md:hidden p-2 text-white"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden glass-dark mt-4 mx-4 rounded-lg">
-          <nav className="flex flex-col space-y-4 p-4">
-            <Link href="/" className="text-white hover:text-gray-300">Home</Link>
-            <Link href="/destinations" className="text-white hover:text-gray-300">Destinations</Link>
-            <Link href="/tours" className="text-white hover:text-gray-300">Tours</Link>
-            <Link href="/about" className="text-white hover:text-gray-300">About</Link>
-            <Link href="/contact" className="text-white hover:text-gray-300">Contact</Link>
-            {/* <Link href="/blog" className="text-white hover:text-gray-300">Blog</Link> */}
-            {!user && (
+        <div className="md:hidden border-t border-white/[0.08] bg-black">
+          <nav className="tz-container flex flex-col py-4 gap-1">
+            <Link href="/" className="py-3 text-white text-base" onClick={() => setIsMenuOpen(false)}>Home</Link>
+            <Link href="/trips" className="py-3 text-white text-base" onClick={() => setIsMenuOpen(false)}>Trips</Link>
+            <Link href="/contact" className="py-3 text-white text-base" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+            {user ? (
               <>
-                <Link href="/login" className="text-white hover:text-gray-300">Login</Link>
-                <Link href="/register" className="text-white hover:text-gray-300">Sign Up</Link>
+                <Link href="/dashboard" className="py-3 text-[#a1a1a6] text-base" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+                {user.role === 'admin' && (
+                  <Link href="/admin" className="py-3 text-[#a1a1a6] text-base" onClick={() => setIsMenuOpen(false)}>Admin</Link>
+                )}
+                <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="py-3 text-left text-[#a1a1a6] text-base">Logout</button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="py-3 text-[#a1a1a6] text-base" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                <Link href="/register" className="py-3 text-white text-base font-medium" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
               </>
             )}
           </nav>
