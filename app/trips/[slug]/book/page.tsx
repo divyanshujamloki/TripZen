@@ -9,6 +9,7 @@ import { RootState } from '../../../../redux/store';
 import { Trip } from '../../../../types/trip';
 import { formatPrice, getAvailableSeats } from '../../../../lib/utils';
 import { apiJson } from '../../../../lib/apiClient';
+import { payWithRazorpay, CreateOrderResponse } from '../../../../lib/razorpay';
 import Button from '../../../../components/ui/Button';
 
 export default function BookTripPage({ params }: { params: { slug: string } }) {
@@ -45,11 +46,12 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
 
     setLoading(true);
     setError('');
+
     try {
+      // Step 1: Create a new booking (never reuse old order_mock_ bookings)
       const { ok: bookingOk, data: bookingData } = await apiJson<{
         message?: string;
         booking: { id: string };
-        razorpayOrderId?: string;
       }>('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -57,20 +59,26 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
       });
       if (!bookingOk) throw new Error(bookingData.message);
 
-      const orderId = bookingData.razorpayOrderId ?? `order_mock_${Date.now()}`;
-      const { ok: payOk, data: payData } = await apiJson<{ message?: string }>('/api/payments/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          bookingId: bookingData.booking.id,
-          razorpayOrderId: orderId,
-          razorpayPaymentId: `pay_mock_${Date.now()}`,
-          razorpaySignature: 'mock',
-        }),
-      });
-      if (!payOk) throw new Error(payData.message);
+      const bookingId = bookingData.booking.id;
 
-      router.push(`/dashboard?booking=${bookingData.booking.id}`);
+      // Step 2: Create Razorpay order — expect order_Nxxx, not order_mock_
+      const { ok: orderOk, data: orderData } = await apiJson<CreateOrderResponse & { message?: string }>(
+        '/api/payments/create-order',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ bookingId }),
+        }
+      );
+      if (!orderOk) throw new Error(orderData.message);
+
+      // Step 3: Open Razorpay Checkout (or mock only in local dev)
+      await payWithRazorpay(orderData, bookingId, token, {
+        description: trip.title,
+        onDismiss: () => setLoading(false),
+      });
+
+      router.push(`/dashboard?booking=${bookingId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Booking failed');
     } finally {
@@ -121,10 +129,10 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
             {error && <p className="text-sm text-[#a1a1a6]">{error}</p>}
 
             <Button type="submit" disabled={loading || available === 0} className="w-full">
-              {loading ? <Loader2 size={18} className="animate-spin" /> : 'Confirm booking'}
+              {loading ? <Loader2 size={18} className="animate-spin" /> : 'Pay & confirm booking'}
             </Button>
 
-            <p className="text-[#6e6e73] text-xs text-center">Payment processed via backend (dev mode)</p>
+            <p className="text-[#6e6e73] text-xs text-center">Secure payment via Razorpay</p>
           </form>
         </div>
       </div>
