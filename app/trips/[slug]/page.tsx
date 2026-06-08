@@ -1,16 +1,31 @@
 import { notFound } from 'next/navigation';
-import { getTripBySlug, getQuestionsBySlug } from '../../../lib/mockStore';
+import { BACKEND_URL, normalizeResponse } from '../../../lib/backendApi';
+import { Trip, TripQuestion } from '../../../types/trip';
 import TripHero from '../../../components/trip/TripHero';
 import TripInclusions from '../../../components/trip/TripInclusions';
 import TripItinerary from '../../../components/trip/TripItinerary';
 import TripBookingCard from '../../../components/trip/TripBookingCard';
 import TripQuestions from '../../../components/trip/TripQuestions';
 
-export default function TripDetailPage({ params }: { params: { slug: string } }) {
-  const trip = getTripBySlug(params.slug);
+async function fetchJson<T>(path: string): Promise<T | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}${path}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return normalizeResponse(await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+export default async function TripDetailPage({ params }: { params: { slug: string } }) {
+  const tripData = await fetchJson<{ trip: Trip }>(`/api/trips/${params.slug}`);
+  const trip = tripData?.trip;
   if (!trip || trip.status === 'draft') notFound();
 
-  const questions = getQuestionsBySlug(params.slug);
+  const questionsData = await fetchJson<{ questions: TripQuestion[] }>(
+    `/api/trips/${params.slug}/questions`
+  );
+  const questions = questionsData?.questions ?? [];
 
   return (
     <div className="tz-page py-8 sm:py-12">

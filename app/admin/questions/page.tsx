@@ -11,7 +11,8 @@ export default function AdminQuestionsPage() {
   const [loading, setLoading] = useState<string | null>(null);
 
   const load = () => {
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     fetch('/api/admin/questions?answered=false', { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setQuestions(d.questions ?? []));
@@ -23,7 +24,8 @@ export default function AdminQuestionsPage() {
     const answer = answers[id];
     if (!answer) return;
     setLoading(id);
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     await fetch(`/api/admin/questions/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

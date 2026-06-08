@@ -33,3 +33,8 @@ export function slugify(text: string): string {
 export function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
+
+export function toDateInput(value?: string): string {
+  if (!value) return '';
+  return value.split('T')[0];
+}

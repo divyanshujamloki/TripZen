@@ -9,7 +9,9 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
   const [trip, setTrip] = useState<Trip | null>(null);
 
   useEffect(() => {
-    fetch(`/api/admin/trips/${params.id}`)
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
+    fetch(`/api/admin/trips/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setTrip(d.trip));
   }, [params.id]);

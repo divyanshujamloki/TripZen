@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Trip, ItineraryDay } from '../../types/trip';
+import { slugify, toDateInput } from '../../lib/utils';
 import Button from '../ui/Button';
 
 interface TripFormProps {
@@ -18,8 +19,8 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
 
   const [title, setTitle] = useState(initial?.title ?? '');
   const [location, setLocation] = useState(initial?.location ?? '');
-  const [startDate, setStartDate] = useState(initial?.startDate ?? '');
-  const [endDate, setEndDate] = useState(initial?.endDate ?? '');
+  const [startDate, setStartDate] = useState(toDateInput(initial?.startDate));
+  const [endDate, setEndDate] = useState(toDateInput(initial?.endDate));
   const [pricePerPerson, setPricePerPerson] = useState(initial?.pricePerPerson ?? 1500);
   const [totalSeats, setTotalSeats] = useState(initial?.totalSeats ?? 40);
   const [status, setStatus] = useState(initial?.status ?? 'draft');
@@ -45,8 +46,14 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
       return;
     }
 
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
-    const body = {
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) {
+      setError('Please sign in as admin');
+      setLoading(false);
+      return;
+    }
+
+    const body: Record<string, unknown> = {
       title,
       location,
       startDate,
@@ -59,8 +66,12 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
       exclusions: exclusions.split('\n').filter(Boolean),
       itinerary,
       whatsappGroupLink,
-      coverImage: '/trips/rishikesh.jpg',
+      coverImage: initial?.coverImage ?? '/trips/rishikesh.jpg',
     };
+
+    if (!tripId) {
+      body.slug = slugify(title);
+    }
 
     try {
       const url = tripId ? `/api/admin/trips/${tripId}` : '/api/admin/trips';

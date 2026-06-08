@@ -12,7 +12,8 @@ export default function AdminDashboard() {
   const [questions, setQuestions] = useState<TripQuestion[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
 
     Promise.all([

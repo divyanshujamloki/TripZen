@@ -34,7 +34,8 @@ export default function DashboardContent() {
           if (b.status === 'paid' || b.status === 'confirmed') {
             const res = await fetch(`/api/bookings/${b.id}`, { headers: { Authorization: `Bearer ${token}` } });
             const d = await res.json();
-            if (d.whatsappGroupLink) links[b.id] = d.whatsappGroupLink;
+            const link = d.whatsappGroupLink ?? d.booking?.whatsappGroupLink;
+            if (link) links[b.id] = link;
           }
         }
         setWhatsappLinks(links);

@@ -12,7 +12,8 @@ export default function AdminTripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
 
   const load = () => {
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     fetch('/api/admin/trips', { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setTrips(d.trips ?? []));
@@ -22,7 +23,8 @@ export default function AdminTripsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this trip?')) return;
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     await fetch(`/api/admin/trips/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },

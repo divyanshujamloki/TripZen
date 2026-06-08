@@ -8,7 +8,8 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('tripzen_token') ?? 'mock-token-admin-1';
+    const token = localStorage.getItem('tripzen_token');
+    if (!token) return;
     fetch('/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setBookings(d.bookings ?? []));

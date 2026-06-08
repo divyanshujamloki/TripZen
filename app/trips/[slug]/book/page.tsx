@@ -54,10 +54,16 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
       const bookingData = await bookingRes.json();
       if (!bookingRes.ok) throw new Error(bookingData.message);
 
+      const orderId = bookingData.razorpayOrderId ?? `order_mock_${Date.now()}`;
       const payRes = await fetch('/api/payments/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bookingId: bookingData.booking.id }),
+        body: JSON.stringify({
+          bookingId: bookingData.booking.id,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: `pay_mock_${Date.now()}`,
+          razorpaySignature: 'mock',
+        }),
       });
       if (!payRes.ok) throw new Error((await payRes.json()).message);
 
@@ -115,7 +121,7 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
               {loading ? <Loader2 size={18} className="animate-spin" /> : 'Confirm booking'}
             </Button>
 
-            <p className="text-[#6e6e73] text-xs text-center">Mock payment — Razorpay coming soon</p>
+            <p className="text-[#6e6e73] text-xs text-center">Payment processed via backend (dev mode)</p>
           </form>
         </div>
       </div>
