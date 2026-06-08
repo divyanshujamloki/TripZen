@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Booking } from '../../../types/trip';
+import { apiJson } from '../../../lib/apiClient';
 import { formatPrice } from '../../../lib/utils';
 
 export default function AdminBookingsPage() {
@@ -10,9 +11,8 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    fetch('/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setBookings(d.bookings ?? []));
+    apiJson<{ bookings: Booking[] }>('/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setBookings(data.bookings ?? []));
   }, []);
 
   return (

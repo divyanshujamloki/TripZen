@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { RootState } from '../../../../redux/store';
 import { Trip } from '../../../../types/trip';
 import { formatPrice, getAvailableSeats } from '../../../../lib/utils';
+import { apiJson } from '../../../../lib/apiClient';
 import Button from '../../../../components/ui/Button';
 
 export default function BookTripPage({ params }: { params: { slug: string } }) {
@@ -20,9 +21,8 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`/api/trips/${params.slug}`)
-      .then((r) => r.json())
-      .then((data) => setTrip(data.trip));
+    apiJson<{ trip: Trip }>(`/api/trips/${params.slug}`)
+      .then(({ data }) => setTrip(data.trip));
   }, [params.slug]);
 
   if (!trip) {
@@ -46,16 +46,19 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
     setLoading(true);
     setError('');
     try {
-      const bookingRes = await fetch('/api/bookings', {
+      const { ok: bookingOk, data: bookingData } = await apiJson<{
+        message?: string;
+        booking: { id: string };
+        razorpayOrderId?: string;
+      }>('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ tripId: trip.id, seats }),
       });
-      const bookingData = await bookingRes.json();
-      if (!bookingRes.ok) throw new Error(bookingData.message);
+      if (!bookingOk) throw new Error(bookingData.message);
 
       const orderId = bookingData.razorpayOrderId ?? `order_mock_${Date.now()}`;
-      const payRes = await fetch('/api/payments/verify', {
+      const { ok: payOk, data: payData } = await apiJson<{ message?: string }>('/api/payments/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -65,7 +68,7 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
           razorpaySignature: 'mock',
         }),
       });
-      if (!payRes.ok) throw new Error((await payRes.json()).message);
+      if (!payOk) throw new Error(payData.message);
 
       router.push(`/dashboard?booking=${bookingData.booking.id}`);
     } catch (err) {

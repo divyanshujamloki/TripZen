@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Map, Users, MessageCircle, Plus } from 'lucide-react';
 import { Trip, Booking, TripQuestion } from '../../types/trip';
+import { apiJson } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 
 export default function AdminDashboard() {
@@ -17,13 +18,13 @@ export default function AdminDashboard() {
     const headers = { Authorization: `Bearer ${token}` };
 
     Promise.all([
-      fetch('/api/admin/trips', { headers }).then((r) => r.json()),
-      fetch('/api/admin/bookings', { headers }).then((r) => r.json()),
-      fetch('/api/admin/questions?answered=false', { headers }).then((r) => r.json()),
+      apiJson<{ trips: Trip[] }>('/api/admin/trips', { headers }),
+      apiJson<{ bookings: Booking[] }>('/api/admin/bookings', { headers }),
+      apiJson<{ questions: TripQuestion[] }>('/api/admin/questions?answered=false', { headers }),
     ]).then(([t, b, q]) => {
-      setTrips(t.trips ?? []);
-      setBookings(b.bookings ?? []);
-      setQuestions(q.questions ?? []);
+      setTrips(t.data.trips ?? []);
+      setBookings(b.data.bookings ?? []);
+      setQuestions(q.data.questions ?? []);
     });
   }, []);
 

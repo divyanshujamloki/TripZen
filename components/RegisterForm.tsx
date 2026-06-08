@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../redux/slices/authSlice';
+import { apiJson } from '../lib/apiClient';
 import Button from './ui/Button';
 
 export default function RegisterForm() {
@@ -32,18 +33,20 @@ export default function RegisterForm() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Registration failed');
+      const { ok, data } = await apiJson<{ message?: string; token: string; user: { role: string } }>(
+        '/api/auth/signup',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password,
+          }),
+        }
+      );
+      if (!ok) throw new Error(data.message || 'Registration failed');
 
       setStatus('success');
       dispatch(loginSuccess({ user: data.user, token: data.token }));

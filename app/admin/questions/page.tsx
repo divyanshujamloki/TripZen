@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { TripQuestion } from '../../../types/trip';
+import { apiFetch, apiJson } from '../../../lib/apiClient';
 import Button from '../../../components/ui/Button';
 
 export default function AdminQuestionsPage() {
@@ -13,9 +14,8 @@ export default function AdminQuestionsPage() {
   const load = () => {
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    fetch('/api/admin/questions?answered=false', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setQuestions(d.questions ?? []));
+    apiJson<{ questions: TripQuestion[] }>('/api/admin/questions?answered=false', { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setQuestions(data.questions ?? []));
   };
 
   useEffect(() => { load(); }, []);
@@ -26,7 +26,7 @@ export default function AdminQuestionsPage() {
     setLoading(id);
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    await fetch(`/api/admin/questions/${id}`, {
+    await apiFetch(`/api/admin/questions/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ answer }),

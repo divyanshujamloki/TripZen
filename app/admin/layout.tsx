@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
+import { apiJson } from '../../lib/apiClient';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,9 +28,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data) => {
+    apiJson<{ user: { role: string } }>('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => {
         if (data.user?.role === 'admin') setReady(true);
         else router.push('/dashboard');
       })

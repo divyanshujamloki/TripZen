@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Trip } from '../../types/trip';
+import { apiJson } from '../../lib/apiClient';
 import TripCard from '../../components/trip/TripCard';
 import SectionHeading from '../../components/ui/SectionHeading';
 
@@ -10,9 +11,8 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/trips?status=upcoming')
-      .then((r) => r.json())
-      .then((data) => setTrips(data.trips ?? []))
+    apiJson<{ trips: Trip[] }>('/api/trips?status=upcoming')
+      .then(({ data }) => setTrips(data.trips ?? []))
       .finally(() => setLoading(false));
   }, []);
 

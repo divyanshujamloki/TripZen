@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Trip } from '../../../types/trip';
+import { apiFetch, apiJson } from '../../../lib/apiClient';
 import { formatPrice, formatDateRange } from '../../../lib/utils';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
@@ -14,9 +15,8 @@ export default function AdminTripsPage() {
   const load = () => {
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    fetch('/api/admin/trips', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setTrips(d.trips ?? []));
+    apiJson<{ trips: Trip[] }>('/api/admin/trips', { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setTrips(data.trips ?? []));
   };
 
   useEffect(() => { load(); }, []);
@@ -25,7 +25,7 @@ export default function AdminTripsPage() {
     if (!confirm('Delete this trip?')) return;
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    await fetch(`/api/admin/trips/${id}`, {
+    await apiFetch(`/api/admin/trips/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });

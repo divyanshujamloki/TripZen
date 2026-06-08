@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../redux/slices/authSlice';
+import { apiJson } from '../lib/apiClient';
 import Button from './ui/Button';
 
 export default function LoginForm() {
@@ -24,13 +25,15 @@ export default function LoginForm() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Login failed');
+      const { ok, data } = await apiJson<{ message?: string; token: string; user: { role: string } }>(
+        '/api/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        }
+      );
+      if (!ok) throw new Error(data.message || 'Login failed');
 
       dispatch(loginSuccess({ user: data.user, token: data.token }));
       localStorage.setItem('tripzen_token', data.token);

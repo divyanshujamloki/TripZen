@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { apiJson } from '../../lib/apiClient';
 
 interface ContactFormData {
     fullName: string;
@@ -26,15 +27,13 @@ export const submitContactForm = createAsyncThunk(
     'contact/submitForm',
     async (formData: ContactFormData, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/contact', {
+            const { ok, data } = await apiJson<{ message?: string }>('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
+            if (!ok) {
                 return rejectWithValue(data.message || 'Failed to send inquiry.');
             }
 

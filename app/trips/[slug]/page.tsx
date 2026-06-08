@@ -1,31 +1,56 @@
-import { notFound } from 'next/navigation';
-import { BACKEND_URL, normalizeResponse } from '../../../lib/backendApi';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 import { Trip, TripQuestion } from '../../../types/trip';
+import { apiJson } from '../../../lib/apiClient';
 import TripHero from '../../../components/trip/TripHero';
 import TripInclusions from '../../../components/trip/TripInclusions';
 import TripItinerary from '../../../components/trip/TripItinerary';
 import TripBookingCard from '../../../components/trip/TripBookingCard';
 import TripQuestions from '../../../components/trip/TripQuestions';
+import Button from '../../../components/ui/Button';
 
-async function fetchJson<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${BACKEND_URL}${path}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return normalizeResponse(await res.json()) as T;
-  } catch {
-    return null;
+export default function TripDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [trip, setTrip] = useState<Trip | null>(null);
+  const [questions, setQuestions] = useState<TripQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      apiJson<{ trip: Trip }>(`/api/trips/${slug}`),
+      apiJson<{ questions: TripQuestion[] }>(`/api/trips/${slug}/questions`),
+    ]).then(([tripRes, qRes]) => {
+      if (!tripRes.ok || !tripRes.data.trip || tripRes.data.trip.status === 'draft') {
+        setMissing(true);
+        return;
+      }
+      setTrip(tripRes.data.trip);
+      setQuestions(qRes.data.questions ?? []);
+    }).finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center bg-black">
+        <Loader2 className="animate-spin text-white" size={28} />
+      </div>
+    );
   }
-}
 
-export default async function TripDetailPage({ params }: { params: { slug: string } }) {
-  const tripData = await fetchJson<{ trip: Trip }>(`/api/trips/${params.slug}`);
-  const trip = tripData?.trip;
-  if (!trip || trip.status === 'draft') notFound();
-
-  const questionsData = await fetchJson<{ questions: TripQuestion[] }>(
-    `/api/trips/${params.slug}/questions`
-  );
-  const questions = questionsData?.questions ?? [];
+  if (missing || !trip) {
+    return (
+      <div className="tz-page py-20 text-center">
+        <h1 className="text-2xl font-semibold text-white mb-4">Trip not found</h1>
+        <Link href="/trips"><Button variant="secondary">Browse trips</Button></Link>
+      </div>
+    );
+  }
 
   return (
     <div className="tz-page py-8 sm:py-12">

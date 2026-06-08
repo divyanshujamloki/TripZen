@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, Loader2 } from 'lucide-react';
 import SectionHeading from '../../components/ui/SectionHeading';
+import { apiFetch } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 
 export default function ContactPage() {
@@ -14,7 +15,7 @@ export default function ContactPage() {
     e.preventDefault();
     setStatus('loading');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await apiFetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

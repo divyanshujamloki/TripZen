@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Trip } from '../../../../../types/trip';
+import { apiJson } from '../../../../../lib/apiClient';
 import TripForm from '../../../../../components/admin/TripForm';
 
 export default function EditTripPage({ params }: { params: { id: string } }) {
@@ -11,9 +12,8 @@ export default function EditTripPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
-    fetch(`/api/admin/trips/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setTrip(d.trip));
+    apiJson<{ trip: Trip }>(`/api/admin/trips/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setTrip(data.trip));
   }, [params.id]);
 
   if (!trip) {

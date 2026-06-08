@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Trip, ItineraryDay } from '../../types/trip';
 import { slugify, toDateInput } from '../../lib/utils';
+import { apiJson } from '../../lib/apiClient';
 import Button from '../ui/Button';
 
 interface TripFormProps {
@@ -74,8 +75,8 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
     }
 
     try {
-      const url = tripId ? `/api/admin/trips/${tripId}` : '/api/admin/trips';
-      const res = await fetch(url, {
+      const path = tripId ? `/api/admin/trips/${tripId}` : '/api/admin/trips';
+      const { ok, data } = await apiJson<{ message?: string }>(path, {
         method: tripId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,8 +84,7 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
         },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!ok) throw new Error(data.message);
       router.push('/admin/trips');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');

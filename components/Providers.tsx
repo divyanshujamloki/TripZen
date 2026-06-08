@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Provider, useDispatch } from 'react-redux';
 import { store } from '../redux/store';
+import { apiJson } from '../lib/apiClient';
 import { loginSuccess } from '../redux/slices/authSlice';
 
 function AuthHydrator({ children }: { children: React.ReactNode }) {
@@ -12,10 +13,13 @@ function AuthHydrator({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('tripzen_token');
     if (!token) return;
 
-    fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.user) dispatch(loginSuccess({ user: data.user, token }));
+    apiJson<{ user: { id: string; name: string; email: string; role: string } }>(
+      '/api/auth/me',
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+      .then(({ ok, data }) => {
+        if (ok && data.user) dispatch(loginSuccess({ user: data.user, token }));
+        else localStorage.removeItem('tripzen_token');
       })
       .catch(() => localStorage.removeItem('tripzen_token'));
   }, [dispatch]);

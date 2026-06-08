@@ -8,6 +8,7 @@ import { Loader2, Download, MessageCircle, Calendar, Users } from 'lucide-react'
 import { RootState } from '../../redux/store';
 import { Booking } from '../../types/trip';
 import { formatPrice } from '../../lib/utils';
+import { apiJson } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 
 export default function DashboardContent() {
@@ -25,15 +26,16 @@ export default function DashboardContent() {
       return;
     }
 
-    fetch('/api/bookings', { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then(async (data) => {
+    apiJson<{ bookings: Booking[] }>('/api/bookings', { headers: { Authorization: `Bearer ${token}` } })
+      .then(async ({ data }) => {
         setBookings(data.bookings ?? []);
         const links: Record<string, string> = {};
         for (const b of data.bookings ?? []) {
           if (b.status === 'paid' || b.status === 'confirmed') {
-            const res = await fetch(`/api/bookings/${b.id}`, { headers: { Authorization: `Bearer ${token}` } });
-            const d = await res.json();
+            const { data: d } = await apiJson<{ whatsappGroupLink?: string; booking?: { whatsappGroupLink?: string } }>(
+              `/api/bookings/${b.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
             const link = d.whatsappGroupLink ?? d.booking?.whatsappGroupLink;
             if (link) links[b.id] = link;
           }

@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { MessageCircle, Send, Loader2 } from 'lucide-react';
 import { TripQuestion } from '../../types/trip';
+import { apiFetch } from '../../lib/apiClient';
 import Button from '../ui/Button';
 
 interface TripQuestionsProps {
@@ -22,7 +23,7 @@ export default function TripQuestions({ slug, initialQuestions }: TripQuestionsP
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/trips/${slug}/questions`, {
+      const res = await apiFetch(`/api/trips/${slug}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, question }),
