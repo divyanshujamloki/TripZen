@@ -7,6 +7,7 @@ import { Trip, ItineraryDay } from '../../types/trip';
 import { slugify, toDateInput } from '../../lib/utils';
 import { apiJson } from '../../lib/apiClient';
 import Button from '../ui/Button';
+import CoverImageUpload from './CoverImageUpload';
 
 interface TripFormProps {
   initial?: Partial<Trip>;
@@ -29,6 +30,7 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
   const [inclusions, setInclusions] = useState((initial?.inclusions ?? []).join('\n'));
   const [exclusions, setExclusions] = useState((initial?.exclusions ?? []).join('\n'));
   const [whatsappGroupLink, setWhatsappGroupLink] = useState(initial?.whatsappGroupLink ?? '');
+  const [coverImage, setCoverImage] = useState(initial?.coverImage ?? '');
   const [itineraryJson, setItineraryJson] = useState(
     JSON.stringify(initial?.itinerary ?? [{ day: 1, title: 'Day 1', activities: ['Activity 1'] }], null, 2)
   );
@@ -67,7 +69,7 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
       exclusions: exclusions.split('\n').filter(Boolean),
       itinerary,
       whatsappGroupLink,
-      coverImage: initial?.coverImage ?? '/trips/rishikesh.jpg',
+      coverImage: coverImage || '/trips/rishikesh.jpg',
     };
 
     if (!tripId) {
@@ -137,6 +139,8 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
           <input className={inputClass} value={whatsappGroupLink} onChange={(e) => setWhatsappGroupLink(e.target.value)} />
         </div>
       </div>
+
+      <CoverImageUpload value={coverImage} onChange={setCoverImage} tripId={tripId} />
 
       <div>
         <label className="block text-sm text-gray-400 mb-1">Description</label>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Calendar, Users, ChevronRight } from 'lucide-react';
 import { Trip } from '../../types/trip';
 import { formatPrice, formatDateRange, getAvailableSeats } from '../../lib/utils';
+import { isVideoUrl } from '../../lib/mediaUpload';
 import Badge from '../ui/Badge';
 
 interface TripCardProps {
@@ -21,6 +22,8 @@ function getStatusBadge(trip: Trip) {
 
 export default function TripCard({ trip, index = 0 }: TripCardProps) {
   const available = getAvailableSeats(trip.totalSeats, trip.bookedSeats);
+  const cover = trip.coverImage || '/trips/rishikesh.jpg';
+  const isVideo = isVideoUrl(cover);
 
   return (
     <motion.div
@@ -31,7 +34,20 @@ export default function TripCard({ trip, index = 0 }: TripCardProps) {
     >
       <Link href={`/trips/${trip.slug}`} className="group block tz-card-hover overflow-hidden">
         <div className="relative h-44 sm:h-48 bg-black border-b border-white/[0.08] flex items-end p-4 sm:p-5">
-          <div className="absolute inset-0 bg-[url('/trips/rishikesh.jpg')] bg-cover bg-center opacity-[0.15] group-hover:opacity-[0.22] transition-opacity duration-500" />
+          {isVideo ? (
+            <video
+              src={cover}
+              className="absolute inset-0 h-full w-full object-cover opacity-[0.15] group-hover:opacity-[0.22] transition-opacity duration-500"
+              muted
+              playsInline
+              preload="metadata"
+            />
+          ) : (
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-[0.15] group-hover:opacity-[0.22] transition-opacity duration-500"
+              style={{ backgroundImage: `url('${cover}')` }}
+            />
+          )}
           <Badge status={getStatusBadge(trip)} />
         </div>
         <div className="p-5 sm:p-6">

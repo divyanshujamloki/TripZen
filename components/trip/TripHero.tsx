@@ -1,6 +1,7 @@
 import { MapPin, Calendar, Users } from 'lucide-react';
 import { Trip } from '../../types/trip';
 import { formatPrice, formatDateRange, getAvailableSeats } from '../../lib/utils';
+import { isVideoUrl } from '../../lib/mediaUpload';
 import Badge from '../ui/Badge';
 
 interface TripHeroProps {
@@ -10,12 +11,25 @@ interface TripHeroProps {
 export default function TripHero({ trip }: TripHeroProps) {
   const available = getAvailableSeats(trip.totalSeats, trip.bookedSeats);
   const badgeStatus = available === 0 ? 'full' : available <= 5 ? 'few-seats' : 'upcoming';
+  const cover = trip.coverImage || '/trips/rishikesh.jpg';
+  const isVideo = isVideoUrl(cover);
 
   return (
     <div className="tz-card overflow-hidden">
+      <div className="relative h-48 sm:h-64 md:h-72 bg-black border-b border-white/[0.08]">
+        {isVideo ? (
+          <video src={cover} className="h-full w-full object-cover opacity-80" controls muted playsInline />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt={trip.title} className="h-full w-full object-cover opacity-80" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-10">
+          <Badge status={badgeStatus} />
+        </div>
+      </div>
       <div className="p-6 sm:p-8 md:p-10 lg:p-12">
-        <Badge status={badgeStatus} />
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white mt-5 mb-4 text-balance">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white mb-4 text-balance">
           {trip.title}
         </h1>
         <p className="text-[#a1a1a6] text-sm sm:text-base max-w-2xl mb-8 leading-relaxed">{trip.description}</p>
