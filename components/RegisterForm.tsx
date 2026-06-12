@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, FocusEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -8,29 +8,97 @@ import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../redux/slices/authSlice';
 import { apiJson } from '../lib/apiClient';
+import {
+  FieldErrors,
+  SignupFormData,
+  validateConfirmPassword,
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+  validateSignupForm,
+} from '../lib/validation';
 import Button from './ui/Button';
+import FieldError, { FormErrorAlert, inputErrorClass, labelErrorClass } from './ui/FieldError';
+
+type SignupField = keyof SignupFormData;
+
+const PASSWORD_HINT =
+  'At least 8 characters with uppercase, lowercase, number, and special character.';
 
 export default function RegisterForm() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({
-    fullName: '', email: '', phone: '', password: '', confirmPassword: '',
+  const [formData, setFormData] = useState<SignupFormData>({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors<SignupField>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const validators: Record<SignupField, (value: string) => string | undefined> = {
+    fullName: validateName,
+    email: validateEmail,
+    phone: (value) => validatePhone(value, true),
+    password: validatePassword,
+    confirmPassword: (value) => validateConfirmPassword(formData.password, value),
+  };
+
+  const updateField = (field: SignupField, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+    if (field === 'password' && fieldErrors.confirmPassword && formData.confirmPassword) {
+      const confirmError = validateConfirmPassword(value, formData.confirmPassword);
+      setFieldErrors((prev) => ({
+        ...prev,
+        confirmPassword: confirmError,
+      }));
+    }
+  };
+
+  const validateField = (field: SignupField, value: string) => {
+    const error = validators[field](value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (error) next[field] = error;
+      else delete next[field];
+      return next;
+    });
+    return !error;
+  };
+
+  const handleBlur = (field: SignupField) => (e: FocusEvent<HTMLInputElement>) => {
+    validateField(field, e.target.value);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
+
+    const errors = validateSignupForm(formData);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setStatus('error');
-      setErrorMessage('Passwords do not match.');
+      setErrorMessage('Please fix the errors below.');
       return;
     }
 
     setStatus('loading');
     dispatch(loginStart());
     setErrorMessage('');
+    setFieldErrors({});
+
+    const phone = formData.phone.trim();
 
     try {
       const { ok, data } = await apiJson<{ message?: string; token: string; user: { role: string } }>(
@@ -39,9 +107,9 @@ export default function RegisterForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: formData.fullName,
-            email: formData.email,
-            phone: formData.phone,
+            name: formData.fullName.trim(),
+            email: formData.email.trim().toLowerCase(),
+            ...(phone ? { phone } : {}),
             password: formData.password,
           }),
         }
@@ -67,52 +135,109 @@ export default function RegisterForm() {
           <p className="text-[#a1a1a6] text-sm sm:text-base">Join TripZen to book group trips.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
           <div>
-            <label className="tz-label">Full name</label>
-            <input required type="text" name="fullName" value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              className="tz-input" placeholder="Your name" />
+            <label className={`tz-label ${labelErrorClass(!!fieldErrors.fullName)}`} htmlFor="fullName">Full name</label>
+            <input
+              id="fullName"
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={(e) => updateField('fullName', e.target.value)}
+              onBlur={handleBlur('fullName')}
+              className={`tz-input ${inputErrorClass(!!fieldErrors.fullName)}`}
+              placeholder="Your name"
+              autoComplete="name"
+              aria-invalid={!!fieldErrors.fullName}
+            />
+            <FieldError message={fieldErrors.fullName} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <div>
-              <label className="tz-label">Email</label>
-              <input required type="email" name="email" value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="tz-input" placeholder="you@example.com" />
+              <label className={`tz-label ${labelErrorClass(!!fieldErrors.email)}`} htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={(e) => updateField('email', e.target.value)}
+                onBlur={handleBlur('email')}
+                className={`tz-input ${inputErrorClass(!!fieldErrors.email)}`}
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-invalid={!!fieldErrors.email}
+              />
+              <FieldError message={fieldErrors.email} />
             </div>
             <div>
-              <label className="tz-label">Phone</label>
-              <input required type="tel" name="phone" value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="tz-input" placeholder="+91 98765 43210" />
+              <label className={`tz-label ${labelErrorClass(!!fieldErrors.phone)}`} htmlFor="phone">
+                Phone <span className="text-[#6e6e73]">(optional)</span>
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => updateField('phone', e.target.value)}
+                onBlur={handleBlur('phone')}
+                className={`tz-input ${inputErrorClass(!!fieldErrors.phone)}`}
+                placeholder="+91 98765 43210"
+                autoComplete="tel"
+                aria-invalid={!!fieldErrors.phone}
+              />
+              <FieldError message={fieldErrors.phone} />
             </div>
           </div>
 
           <div>
-            <label className="tz-label">Password</label>
+            <label className={`tz-label ${labelErrorClass(!!fieldErrors.password)}`} htmlFor="password">Password</label>
             <div className="relative">
-              <input required type={showPassword ? 'text' : 'password'} name="password" value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="tz-input pr-12" placeholder="••••••••" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6e6e73] hover:text-white">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={(e) => updateField('password', e.target.value)}
+                onBlur={handleBlur('password')}
+                className={`tz-input pr-12 ${inputErrorClass(!!fieldErrors.password)}`}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                aria-invalid={!!fieldErrors.password}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6e6e73] hover:text-white"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <FieldError message={fieldErrors.password} />
+            {!fieldErrors.password && (
+              <p className="text-[#6e6e73] text-xs mt-1.5">{PASSWORD_HINT}</p>
+            )}
           </div>
 
           <div>
-            <label className="tz-label">Confirm password</label>
-            <input required type={showPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="tz-input" placeholder="••••••••" />
+            <label className={`tz-label ${labelErrorClass(!!fieldErrors.confirmPassword)}`} htmlFor="confirmPassword">Confirm password</label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={(e) => updateField('confirmPassword', e.target.value)}
+              onBlur={handleBlur('confirmPassword')}
+              className={`tz-input ${inputErrorClass(!!fieldErrors.confirmPassword)}`}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              aria-invalid={!!fieldErrors.confirmPassword}
+            />
+            <FieldError message={fieldErrors.confirmPassword} />
           </div>
 
-          {status === 'error' && (
-            <p className="text-sm text-[#a1a1a6] border border-white/20 rounded-xl px-4 py-3">{errorMessage}</p>
-          )}
+          {status === 'error' && errorMessage && <FormErrorAlert message={errorMessage} />}
           {status === 'success' && (
             <p className="text-sm text-white border border-white/20 rounded-xl px-4 py-3 flex items-center gap-2">
               <CheckCircle2 size={16} /> Account created. Redirecting...

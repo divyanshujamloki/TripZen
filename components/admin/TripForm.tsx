@@ -7,7 +7,9 @@ import { Trip, ItineraryDay } from '../../types/trip';
 import { slugify, toDateInput } from '../../lib/utils';
 import { apiJson } from '../../lib/apiClient';
 import Button from '../ui/Button';
+import { FormErrorAlert } from '../ui/FieldError';
 import CoverImageUpload from './CoverImageUpload';
+import ItineraryEditor, { cleanItineraryForSubmit, normalizeItinerary } from './ItineraryEditor';
 
 interface TripFormProps {
   initial?: Partial<Trip>;
@@ -31,20 +33,16 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
   const [exclusions, setExclusions] = useState((initial?.exclusions ?? []).join('\n'));
   const [whatsappGroupLink, setWhatsappGroupLink] = useState(initial?.whatsappGroupLink ?? '');
   const [coverImage, setCoverImage] = useState(initial?.coverImage ?? '');
-  const [itineraryJson, setItineraryJson] = useState(
-    JSON.stringify(initial?.itinerary ?? [{ day: 1, title: 'Day 1', activities: ['Activity 1'] }], null, 2)
-  );
+  const [itinerary, setItinerary] = useState<ItineraryDay[]>(() => normalizeItinerary(initial?.itinerary));
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    let itinerary: ItineraryDay[];
-    try {
-      itinerary = JSON.parse(itineraryJson);
-    } catch {
-      setError('Invalid itinerary JSON');
+    const cleanedItinerary = cleanItineraryForSubmit(itinerary);
+    if (cleanedItinerary.length === 0) {
+      setError('Add at least one itinerary day');
       setLoading(false);
       return;
     }
@@ -67,7 +65,7 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
       description,
       inclusions: inclusions.split('\n').filter(Boolean),
       exclusions: exclusions.split('\n').filter(Boolean),
-      itinerary,
+      itinerary: cleanedItinerary,
       whatsappGroupLink,
       coverImage: coverImage || '/trips/rishikesh.jpg',
     };
@@ -158,12 +156,9 @@ export default function TripForm({ initial, tripId }: TripFormProps) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm text-gray-400 mb-1">Itinerary (JSON)</label>
-        <textarea className={`${inputClass} resize-none font-mono text-sm`} rows={8} value={itineraryJson} onChange={(e) => setItineraryJson(e.target.value)} />
-      </div>
+      <ItineraryEditor value={itinerary} onChange={setItinerary} />
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <FormErrorAlert message={error} />}
 
       <Button type="submit" disabled={loading}>
         {loading ? <Loader2 size={18} className="animate-spin" /> : tripId ? 'Update Trip' : 'Create Trip'}

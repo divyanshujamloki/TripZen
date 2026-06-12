@@ -11,6 +11,7 @@ import { formatPrice, getAvailableSeats } from '../../../../lib/utils';
 import { apiJson } from '../../../../lib/apiClient';
 import { payWithRazorpay, CreateOrderResponse } from '../../../../lib/razorpay';
 import Button from '../../../../components/ui/Button';
+import { FormErrorAlert } from '../../../../components/ui/FieldError';
 
 export default function BookTripPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
@@ -126,7 +127,7 @@ export default function BookTripPage({ params }: { params: { slug: string } }) {
               </div>
             </div>
 
-            {error && <p className="text-sm text-[#a1a1a6]">{error}</p>}
+            {error && <FormErrorAlert message={error} />}
 
             <Button type="submit" disabled={loading || available === 0} className="w-full">
               {loading ? <Loader2 size={18} className="animate-spin" /> : 'Pay & confirm booking'}

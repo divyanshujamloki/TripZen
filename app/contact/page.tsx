@@ -6,6 +6,7 @@ import { MapPin, Phone, Mail, Clock, Send, Loader2 } from 'lucide-react';
 import SectionHeading from '../../components/ui/SectionHeading';
 import { apiFetch } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
+import { FormErrorAlert } from '../../components/ui/FieldError';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', message: '' });
@@ -77,7 +78,9 @@ export default function ContactPage() {
               <textarea placeholder="Your message..." required rows={5} value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="tz-input resize-none" />
               {status === 'success' && <p className="text-[#a1a1a6] text-sm">Message sent. We&apos;ll reply soon.</p>}
-              {status === 'error' && <p className="text-[#a1a1a6] text-sm">Something went wrong. Please try again.</p>}
+              {status === 'error' && (
+                <FormErrorAlert message="Something went wrong. Please try again." />
+              )}
               <Button type="submit" disabled={status === 'loading'} className="w-full sm:w-auto">
                 {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} className="mr-2" /> Send</>}
               </Button>

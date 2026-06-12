@@ -4,6 +4,7 @@ import { ChangeEvent, useRef, useState } from 'react';
 import { ImagePlus, Loader2, Video } from 'lucide-react';
 import { detectMediaType, isVideoUrl, uploadMedia } from '../../lib/mediaUpload';
 import Button from '../ui/Button';
+import { FormErrorAlert } from '../ui/FieldError';
 
 interface CoverImageUploadProps {
   value: string;
@@ -110,7 +111,7 @@ export default function CoverImageUpload({ value, onChange, tripId }: CoverImage
         )}
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <FormErrorAlert message={error} />}
       <p className="text-xs text-[#a1a1a6]">JPG, PNG, WebP, MP4, WebM — up to 50MB</p>
     </div>
   );
